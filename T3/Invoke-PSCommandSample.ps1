@@ -1,3 +1,7 @@
+<# 
+	This PowerShell script was automatically converted to PowerShell Workflow so it can be run as a runbook.
+	Specific changes that have been made are marked with a comment starting with “Converter:”
+#>
 <#
 .SYNOPSIS 
     This runbook calls a command inside of an Azure VM
@@ -39,55 +43,42 @@
     AUTHOR: System Center Automation Team
     LASTEDIT: Aug 14, 2014 
 #>
-Workflow Invoke-PSCommandSample
-{
-    Param
-    (
-        [parameter(Mandatory=$true)]
-        [String]
-        $AzureSubscriptionName,
-
-		[parameter(Mandatory=$true)]
-        [PSCredential]
-        $AzureOrgIdCredential,
-        
-        [parameter(Mandatory=$true)]
-        [String]
-        $ResourceGroupName,
-        
-        [parameter(Mandatory=$true)]
-        [String]
-        $VMName,  
-        
-        [parameter(Mandatory=$true)]
-        [String]
-        $VMCredentialName,
-        
-        [parameter(Mandatory=$true)]
-        [String]
-        $PSCommand 
-    )
-       
-    # Get credentials to Azure VM
-    Switch-AzureMode AzureResourceManager
-    $Credential = Get-AutomationPSCredential -Name $VMCredentialName    
-	if ($Credential -eq $null)
-    {
-        throw "Could not retrieve '$VMCredentialName' credential asset. Check that you created this asset in the Automation service."
-    }     
-    
-	# Set up Azure connection by calling the Connect-Azure runbook. You should call this runbook after
-	# every CheckPoint-WorkFlow to ensure that the management certificate is available if this runbook
-	# gets interrupted and starts from the last checkpoint
-    $Uri = Connect-AzureVM -AzureSubscriptionName $AzureSubscriptionName -AzureOrgIdCredential $AzureOrgIdCredential -ResourceGroupName $ResourceGroupName -VMName $VMName 
-    
-	# Run a command on the Azure VM
-    $PSCommandResult = InlineScript {        
-        Invoke-command -ConnectionUri $Using:Uri -credential $Using:Credential -ScriptBlock {
-            Invoke-Expression $Args[0]
-        } -Args $Using:PSCommand
-
-    }
+workflow Invoke-PSCommandSample {
 	
-	$PSCommandResult
+	# Converter: Wrapping initial script in an InlineScript activity, and passing any parameters for use within the InlineScript
+	# Converter: If you want this InlineScript to execute on another host rather than the Automation worker, simply add some combination of -PSComputerName, -PSCredential, -PSConnectionURI, or other workflow common parameters (http://technet.microsoft.com/en-us/library/jj129719.aspx) as parameters of the InlineScript
+	inlineScript {
+		Workflow Invoke-PSCommandSample
+		
+        		$AzureSubscriptionName = Get-AutomationVariable -Name 'AzureSubscriptionName',
+        		$AzureOrgIdCredential = Get-AutomationPSCredential -Name 'AzureOrgIdCredential',
+        		$ResourceGroupName = Get-AutomationVariable -Name 'Resourcegroupname',
+        		$VMName = Get-AutomationVariable -Name 'VMName',  
+        		$VMCredentialName = Get-AutomationPSCredential -Name 'vmcredentialname',
+        		$PSCommand = whoami
+       		
+    		# Get credentials to Azure VM
+    		Switch-AzureMode AzureResourceManager
+    		$Credential = Get-AutomationPSCredential -Name $VMCredentialName    
+			if ($Credential -eq $null)
+    		{
+        		throw "Could not retrieve '$VMCredentialName' credential asset. Check that you created this asset in the Automation service."
+    		}     
+    		
+			# Set up Azure connection by calling the Connect-Azure runbook. You should call this runbook after
+			# every CheckPoint-WorkFlow to ensure that the management certificate is available if this runbook
+			# gets interrupted and starts from the last checkpoint
+    		$Uri = Connect-AzureVM -AzureSubscriptionName $AzureSubscriptionName -AzureOrgIdCredential $AzureOrgIdCredential -ResourceGroupName $ResourceGroupName -VMName $VMName 
+    		
+			# Run a command on the Azure VM
+    		$PSCommandResult = InlineScript {        
+        		Invoke-command -ConnectionUri $Using:Uri -credential $Using:Credential -ScriptBlock {
+            		Invoke-Expression $Args[0]
+        		} -Args $Using:PSCommand
+		
+    		}
+			
+			$PSCommandResult
+		}
+	}
 }
