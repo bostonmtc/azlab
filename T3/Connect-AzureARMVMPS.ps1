@@ -46,6 +46,9 @@
 
     $ErrorActionPreference = "SilentlyContinue"
     $AzureOrgIdCredential = Get-AutomationPSCredential -Name $AzureOrgIdCredentialName
+    $AzureSubscriptionId = Get-AutomationVariable -Name 'AzureSubscriptionName'
+    $ResourceGroupName = Get-AutomationVariable -Name 'Resourcegroupname'
+    $VMname = Get-AutomationVariable -Name 'VMName'
 	
     $Login = Login-AzureRmAccount -Credential $AzureOrgIdCredential
 
